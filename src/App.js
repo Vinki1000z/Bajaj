@@ -15,7 +15,7 @@ const App = () => {
     try {
       setError(null);
       const jsonData = JSON.parse(input);
-      const res = await axios.post("http://localhost:5000/bfhl", jsonData);
+      const res = await axios.post("https://backend-2k78.onrender.com/bfhl", jsonData);
       setResponse(res.data);
       alert('Submission successful!');
     } catch (err) {
