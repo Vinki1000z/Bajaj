@@ -1,110 +1,103 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import axios from "axios";
 
-function App() {
-  const [input, setInput] = useState('');
+const App = () => {
+  const [input, setInput] = useState("");
   const [response, setResponse] = useState(null);
-  const [selectedOptions, setSelectedOptions] = useState(['Numbers', 'Highest Alphabet']);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
+  const [selectedOptions, setSelectedOptions] = useState({
+    alphabets: false,
+    numbers: false,
+    highestAlphabet: false,
+  });
 
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+  const handleSubmit = async () => {
     try {
-      const parsedInput = JSON.parse(input);
-      const res = await fetch('YOUR_BACKEND_API_URL/bfhl', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(parsedInput),
-      });
-      const data = await res.json();
-      setResponse(data);
+      setError(null);
+      const jsonData = JSON.parse(input);
+      const res = await axios.post("http://localhost:5000/bfhl", jsonData);
+      setResponse(res.data);
+      alert('Submission successful!');
     } catch (err) {
-      setError('Invalid JSON input');
+      setError("Invalid JSON or server error");
+      alert('Submission failed: ' + err.message); // Alert on error
     }
   };
 
-  const handleOptionToggle = (option) => {
-    setSelectedOptions(prev => 
-      prev.includes(option) 
-        ? prev.filter(item => item !== option)
-        : [...prev, option]
-    );
+  const handleSelectChange = (event) => {
+    const { name, checked } = event.target;
+    setSelectedOptions((prev) => ({ ...prev, [name]: checked }));
   };
 
-  const options = ['Numbers', 'Alphabets', 'Highest Alphabet'];
+  const renderResponse = () => {
+    if (!response) return null;
+
+    const data = {};
+    if (selectedOptions.numbers) data.numbers = response.numbers;
+    if (selectedOptions.alphabets) data.alphabets = response.alphabets;
+    if (selectedOptions.highestAlphabet)
+      data.highestAlphabet = response.highest_alphabet;
+
+    return <pre>{JSON.stringify(data, null, 2)}</pre>;
+  };
 
   return (
-    <div className="container mx-auto p-4 max-w-md">
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">API Input</label>
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="w-full p-2 border rounded"
-          rows="3"
-        />
+    <div className="container">
+      <h1>Enter The Data</h1>
+     <div className="form-floating">
+            <textarea
+                className="form-control"
+                placeholder="Leave a comment here"
+                id="floatingTextarea2"
+                style={{ height: '100px' }}
+                rows="10"
+                cols="50"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+            />
+        </div>
+        <div className="my-2">
+
+      <button  type="button" class="btn btn-primary" onClick={handleSubmit}>Submit</button>
+        </div>
+
+      {error && <p>{error}</p>}
+
+      <div>
+
+
+        <label>
+          <input
+            type="checkbox"
+            name="alphabets"
+            checked={selectedOptions.alphabets}
+            onChange={handleSelectChange}
+          />
+          Alphabets
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            name="numbers"
+            checked={selectedOptions.numbers}
+            onChange={handleSelectChange}
+          />
+          Numbers
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            name="highestAlphabet"
+            checked={selectedOptions.highestAlphabet}
+            onChange={handleSelectChange}
+          />
+          Highest Alphabet
+        </label>
       </div>
-      <button 
-        onClick={handleSubmit}
-        className="w-full bg-blue-600 text-white py-2 rounded mb-4 font-semibold"
-      >
-        Submit
-      </button>
-      {error && <p className="text-red-500">{error}</p>}
-      {response && (
-        <>
-          <div className="relative mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Multi Filter</label>
-            <div className="flex flex-wrap gap-2 p-2 border rounded relative ">
-              {selectedOptions.map(option => (
-                <span key={option} className="bg-gray-200 px-2 py-1 rounded flex items-center text-sm">
-                  {option}
-                  <button onClick={() => handleOptionToggle(option)} className="ml-1 text-gray-600">&times;</button>
-                </span>
-              ))}
-              <button 
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
-                className="absolute right-2 top-1/2 transform -translate-y-1/2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-            {isDropdownOpen && (
-              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                {options.filter(option => !selectedOptions.includes(option)).map(option => (
-                  <div
-                    key={option}
-                    className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-gray-100"
-                    onClick={() => {
-                      handleOptionToggle(option);
-                      setIsDropdownOpen(false);
-                    }}
-                  >
-                    {option}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="bg-gray-100 p-4 rounded">
-            <h2 className="font-bold mb-2">Filtered Response</h2>
-            {selectedOptions.includes('Numbers') && (
-              <p>Numbers: {response.numbers.join(',')}</p>
-            )}
-            {selectedOptions.includes('Highest Alphabet') && (
-              <p>Highest Alphabet: {response.highest_alphabet[0]}</p>
-            )}
-          </div>
-        </>
-      )}
+
+      <div>{renderResponse()}</div>
     </div>
   );
-}
+};
 
 export default App;

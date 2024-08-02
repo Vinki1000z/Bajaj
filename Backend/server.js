@@ -9,9 +9,8 @@ app.use(cors());
 
 
 app.use(express.json());
-//  use routers
 
-
+// post endpoints
 app.post('/bfhl', (req, res) => {
     const userId = 'john_doe_17091999';
     const email = 'john@xyz.com';
@@ -44,6 +43,3 @@ app.get('/bfhl', (req, res) => {
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
   })
-
-  // update the username
-  // achievemnet functionality
